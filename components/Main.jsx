@@ -221,33 +221,24 @@ export default function Main() {
           {isEditing ? (
             <div className="w-full max-w-4xl">
               <h2 className="text-2xl font-bold mb-4">Edit Workouts</h2>
-              {workouts.map((workout, index) => (
-                <WorkoutEditor
-                  key={index}
-                  workout={workout}
-                  onSave={(updatedWorkout) => {
-                    const updatedWorkouts = [...workouts];
-                    updatedWorkouts[index] = updatedWorkout;
-                    setWorkouts(updatedWorkouts);
-                  }}
-                  onRemoveWorkout={() => removeWorkout(index)}
-                  onAddWorkout={addWorkout}
-                  onAddRest={addRest}
-                />
-              ))}
-              <div className="mt-4 flex space-x-2">
-                <button
-                  onClick={addWorkout}
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                >
-                  Add Workout
-                </button>
-                <button
-                  onClick={addRest}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                >
-                  Add Rest
-                </button>
+              <WorkoutEditor
+                workouts={workouts}
+                onSave={(index, updatedWorkout) => {
+                  const updatedWorkouts = [...workouts];
+                  updatedWorkouts[index] = updatedWorkout;
+                  setWorkouts(updatedWorkouts);
+                }}
+                onRemoveWorkout={removeWorkout}
+                onReorder={(startIndex, endIndex) => {
+                  const result = Array.from(workouts);
+                  const [reorderedItem] = result.splice(startIndex, 1);
+                  result.splice(endIndex, 0, reorderedItem);
+                  setWorkouts(result);
+                }}
+                addWorkout={addWorkout}
+                addRest={addRest}
+              />
+              <div className="mt-4">
                 <button
                   onClick={() => setIsEditing(false)}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
