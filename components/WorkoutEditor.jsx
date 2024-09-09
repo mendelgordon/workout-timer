@@ -1,103 +1,111 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaBars, FaGripLines, FaPlus, FaBed, FaEdit, FaEye, FaTrash, FaSave, FaTimes, FaUndo } from 'react-icons/fa';
+import { FaPlus, FaBed, FaEdit, FaEye, FaTrash, FaChevronDown, FaChevronUp, FaUndo, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const WorkoutEditor = ({ workouts = [], onSave, onCancel, onReset, onRemoveWorkout, onReorder, addWorkout, addRest }) => {
-  const handleDragEnd = useCallback((result) => {
-    if (!result.destination) {
-      return;
-    }
-    onReorder(result.source.index, result.destination.index);
-  }, [onReorder]);
+const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
+  const [collapsedItems, setCollapsedItems] = useState(workouts.map(() => true));
+
+
+  const toggleCollapse = (index) => {
+    setCollapsedItems(prev => {
+      const newCollapsedItems = [...prev];
+      newCollapsedItems[index] = !newCollapsedItems[index];
+      return newCollapsedItems;
+    });
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        Tip: Use the grip handle to drag and drop workouts to reorder them.
-      </p>
       <div className="mb-4 flex space-x-2">
         <button
           onClick={addWorkout}
-          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors group"
+          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors group relative"
           title="Add Workout"
         >
           <FaPlus className="w-5 h-5" />
-          <span className="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-8">Add Workout</span>
+          <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">Add Workout</span>
         </button>
         <button
           onClick={addRest}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors group"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors group relative"
           title="Add Rest"
         >
           <FaBed className="w-5 h-5" />
-          <span className="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-8">Add Rest</span>
+          <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">Add Rest</span>
         </button>
       </div>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="workouts">
-          {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef}>
-              {workouts.map((workout, index) => (
-                <Draggable key={workout.id || `workout-${index}`} draggableId={workout.id || `workout-${index}`} index={index}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className="mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600"
-                    >
-                      <div
-                        {...provided.dragHandleProps}
-                        className="bg-gray-200 dark:bg-gray-600 p-2 cursor-move flex items-center justify-between"
-                      >
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {workout.name ? workout.name.charAt(0).toUpperCase() + workout.name.slice(1).toLowerCase() : 'Rest'}
-                        </span>
-                        <div className="flex items-center">
-                          <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">Drag to reorder</span>
-                          <FaGripLines className="text-gray-500 dark:text-gray-400 w-5 h-5" />
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <WorkoutItem
-                          workout={workout}
-                          onSave={(updatedWorkout) => {
-                            onSave(index, updatedWorkout);
-                            // Force re-render to reflect sorting changes immediately
-                            const newWorkouts = [...workouts];
-                            newWorkouts[index] = updatedWorkout;
-                            onReorder(index, index);
-                          }}
-                          onRemove={() => onRemoveWorkout(index)}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
+      <div>
+        {workouts.map((workout, index) => (
+          <div
+            key={workout.id || `workout-${index}`}
+            className="mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600"
+          >
+            <div
+              className="bg-gray-200 dark:bg-gray-600 p-2 flex items-center justify-between"
+              onClick={() => toggleCollapse(index)}
+            >
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {workout.name ? workout.name.charAt(0).toUpperCase() + workout.name.slice(1).toLowerCase() : 'Rest'}
+              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveUp(index);
+                  }}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  disabled={index === 0}
+                >
+                  <FaArrowUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveDown(index);
+                  }}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  disabled={index === workouts.length - 1}
+                >
+                  <FaArrowDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveWorkout(index);
+                  }}
+                  className="p-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200"
+                >
+                  <FaTrash className="w-4 h-4" />
+                </button>
+                {collapsedItems[index] ? <FaChevronDown className="w-4 h-4" /> : <FaChevronUp className="w-4 h-4" />}
+              </div>
             </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+            {!collapsedItems[index] && (
+              <div className="p-4">
+                <WorkoutItem
+                  workout={workout}
+                  onSave={(updatedWorkout) => {
+                    onSave(index, updatedWorkout);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
       <div className="mt-6 flex justify-end space-x-3">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 group"
-          title="Cancel"
-        >
-          <FaTimes className="w-5 h-5" />
-          <span className="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-8">Cancel</span>
-        </button>
-        <button
-          type="button"
-          onClick={onReset}
-          className="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-md shadow-sm text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 group"
+          onClick={() => {
+            if (window.confirm('Are you sure you want to reset all workouts to default?')) {
+              onReset();
+            }
+          }}
+          className="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-md shadow-sm text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 group relative"
           title="Reset"
         >
           <FaUndo className="w-5 h-5" />
-          <span className="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-8">Reset</span>
+          <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">Reset</span>
         </button>
       </div>
     </div>
@@ -120,13 +128,13 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result);
+        saveWorkout({ image: reader.result });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const saveWorkout = (updatedFields = {}) => {
     onSave({
       name,
       description,
@@ -135,12 +143,18 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
       holdTime: parseInt(holdTime),
       image,
       isRest,
-      restTime: parseInt(restTime)
+      restTime: parseInt(restTime),
+      ...updatedFields
     });
   };
 
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value);
+    saveWorkout({ [e.target.name]: e.target.value });
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+    <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
       <div className="space-y-4">
         {!isRest && (
           <>
@@ -149,8 +163,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
               <input
                 type="text"
                 id="name"
+                name="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleInputChange(setName)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                 required
               />
@@ -159,8 +174,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
               <textarea
                 id="description"
+                name="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleInputChange(setDescription)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                 rows="3"
               ></textarea>
@@ -171,8 +187,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                 <input
                   type="number"
                   id="repetitions"
+                  name="repetitions"
                   value={repetitions}
-                  onChange={(e) => setRepetitions(e.target.value)}
+                  onChange={handleInputChange(setRepetitions)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                   min="0"
                   required
@@ -183,8 +200,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                 <input
                   type="number"
                   id="sets"
+                  name="sets"
                   value={sets}
-                  onChange={(e) => setSets(e.target.value)}
+                  onChange={handleInputChange(setSets)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                   min="0"
                   required
@@ -195,8 +213,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                 <input
                   type="number"
                   id="holdTime"
+                  name="holdTime"
                   value={holdTime}
-                  onChange={(e) => setHoldTime(e.target.value)}
+                  onChange={handleInputChange(setHoldTime)}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                   min="0"
                   required
@@ -237,8 +256,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
             <input
               type="number"
               id="restTime"
+              name="restTime"
               value={restTime}
-              onChange={(e) => setRestTime(e.target.value)}
+              onChange={handleInputChange(setRestTime)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
               min="0"
               required
@@ -246,26 +266,18 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
           </div>
         )}
       </div>
-      <div className="mt-4 flex justify-between items-center">
+      <div className="mt-4 flex justify-end items-center">
         <button
           type="button"
           onClick={onRemove}
-          className="px-4 py-2 border border-red-500 text-red-500 rounded-md shadow-sm text-sm font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 group"
+          className="group relative px-4 py-2 border border-red-500 text-red-500 rounded-md shadow-sm text-sm font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           title="Remove"
         >
           <FaTrash className="w-5 h-5" />
-          <span className="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-8">Remove</span>
-        </button>
-        <button
-          type="submit"
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 group"
-          title="Save"
-        >
-          <FaSave className="w-5 h-5" />
-          <span className="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-8">Save</span>
+          <span className="absolute left-full ml-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2">Remove</span>
         </button>
       </div>
-    </form>
+    </div>
   );
 };
 

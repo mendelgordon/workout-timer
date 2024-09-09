@@ -85,6 +85,22 @@ export default function Main() {
     setWorkouts(updatedWorkouts);
   };
 
+  const onMoveUp = (index) => {
+    if (index > 0) {
+      const updatedWorkouts = [...workouts];
+      [updatedWorkouts[index - 1], updatedWorkouts[index]] = [updatedWorkouts[index], updatedWorkouts[index - 1]];
+      setWorkouts(updatedWorkouts);
+    }
+  };
+
+  const onMoveDown = (index) => {
+    if (index < workouts.length - 1) {
+      const updatedWorkouts = [...workouts];
+      [updatedWorkouts[index], updatedWorkouts[index + 1]] = [updatedWorkouts[index + 1], updatedWorkouts[index]];
+      setWorkouts(updatedWorkouts);
+    }
+  };
+
   const timeToSeconds = (time) => {
     const [minutes, seconds] = time.split(':').map(Number);
     return minutes * 60 + seconds;
@@ -185,15 +201,19 @@ export default function Main() {
           <div className="flex flex-wrap justify-center sm:justify-end space-x-2 space-y-2 sm:space-y-0">
             <button
               onClick={handleExport}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors group relative"
+              title="Export"
             >
-              <FaFileExport className="inline-block mr-2" /> Export
+              <FaFileExport className="w-5 h-5" />
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">Export</span>
             </button>
             <button
               onClick={() => fileInputRef.current.click()}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors group relative"
+              title="Import"
             >
-              <FaFileImport className="inline-block mr-2" /> Import
+              <FaFileImport className="w-5 h-5" />
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">Import</span>
             </button>
             <input
               type="file"
@@ -204,10 +224,13 @@ export default function Main() {
             />
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors group relative"
+              title={isEditing ? "View Workout" : "Edit Workout"}
             >
-              {isEditing ? <FaEye className="inline-block mr-2" /> : <FaEdit className="inline-block mr-2" />}
-              {isEditing ? 'View Workout' : 'Edit Workout'}
+              {isEditing ? <FaEye className="w-5 h-5" /> : <FaEdit className="w-5 h-5" />}
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                {isEditing ? 'View Workout' : 'Edit Workout'}
+              </span>
             </button>
           </div>
         </header>
@@ -230,14 +253,26 @@ export default function Main() {
                   setWorkouts(updatedWorkouts);
                 }}
                 onRemoveWorkout={removeWorkout}
-                onReorder={(startIndex, endIndex) => {
-                  const result = Array.from(workouts);
-                  const [reorderedItem] = result.splice(startIndex, 1);
-                  result.splice(endIndex, 0, reorderedItem);
-                  setWorkouts(result);
+                onMoveUp={(index) => {
+                  if (index > 0) {
+                    const updatedWorkouts = [...workouts];
+                    [updatedWorkouts[index - 1], updatedWorkouts[index]] = [updatedWorkouts[index], updatedWorkouts[index - 1]];
+                    setWorkouts(updatedWorkouts);
+                  }
+                }}
+                onMoveDown={(index) => {
+                  if (index < workouts.length - 1) {
+                    const updatedWorkouts = [...workouts];
+                    [updatedWorkouts[index], updatedWorkouts[index + 1]] = [updatedWorkouts[index + 1], updatedWorkouts[index]];
+                    setWorkouts(updatedWorkouts);
+                  }
                 }}
                 addWorkout={addWorkout}
                 addRest={addRest}
+                onReset={() => {
+                  localStorage.removeItem('workouts');
+                  setWorkouts(DEFAULT_WORKOUTS);
+                }}
               />
               <div className="mt-4">
                 <button
@@ -254,8 +289,16 @@ export default function Main() {
                 <select
                   value={currentExerciseIndex}
                   onChange={(e) => {
-                    setCurrentExerciseIndex(Number(e.target.value));
-                    resetTimer();
+                    const newIndex = Number(e.target.value);
+                    setCurrentExerciseIndex(newIndex);
+                    setCurrentRound(0);
+                    setIsResting(false);
+                    remainingTimeRef.current = timeToSeconds(startTime);
+                    setTimerDisplay(formatTime(remainingTimeRef.current));
+                    if (isRunning) {
+                      clearInterval(intervalRef.current);
+                      intervalRef.current = setInterval(updateTimer, 1000);
+                    }
                   }}
                   className="w-2/3 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -277,7 +320,10 @@ export default function Main() {
               </div>
 
               {!workouts[currentExerciseIndex].isRest && (
-                <ExerciseCard exercise={workouts[currentExerciseIndex]} />
+                <ExerciseCard
+                  exercise={workouts[currentExerciseIndex]}
+                  image={workouts[currentExerciseIndex].image}
+                />
               )}
 
               <div className="flex space-x-4">
