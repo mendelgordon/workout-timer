@@ -15,9 +15,9 @@ const DEFAULT_WORKOUTS = [
 const getStoredWorkouts = () => {
   if (typeof window !== 'undefined') {
     const storedWorkouts = localStorage.getItem('workouts');
-    return storedWorkouts ? JSON.parse(storedWorkouts) : null;
+    return storedWorkouts ? JSON.parse(storedWorkouts) : DEFAULT_WORKOUTS;
   }
-  return null;
+  return DEFAULT_WORKOUTS;
 };
 
 export function Main() {
@@ -29,9 +29,13 @@ export function Main() {
   const [currentRound, setCurrentRound] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [workouts, setWorkouts] = useState(() => getStoredWorkouts() || DEFAULT_WORKOUTS);
+  const [workouts, setWorkouts] = useState(DEFAULT_WORKOUTS);
   const [isEditing, setIsEditing] = useState(false);
   const [importError, setImportError] = useState(null);
+
+  useEffect(() => {
+    setWorkouts(getStoredWorkouts());
+  }, []);
 
   const intervalRef = useRef(null);
   const remainingTimeRef = useRef(0);
