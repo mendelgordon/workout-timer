@@ -113,12 +113,19 @@ export default function Main() {
   };
 
   const moveToNextExercise = useCallback(() => {
-    if (currentExerciseIndex < workouts.length - 1) {
+    if (currentRound < parseInt(rounds) - 1) {
+      // Move to the next round of the current exercise
+      setCurrentRound(prev => prev + 1);
+      setIsResting(false);
+      remainingTimeRef.current = timeToSeconds(startTime);
+    } else if (currentExerciseIndex < workouts.length - 1) {
+      // Move to the next exercise
       setCurrentExerciseIndex(prev => prev + 1);
       setCurrentRound(0);
       setIsResting(false);
       remainingTimeRef.current = timeToSeconds(startTime);
     } else {
+      // End of workout
       clearInterval(intervalRef.current);
       setIsRunning(false);
       setIsResting(false);
@@ -127,7 +134,7 @@ export default function Main() {
       remainingTimeRef.current = timeToSeconds(startTime);
       setTimerDisplay(formatTime(remainingTimeRef.current));
     }
-  }, [currentExerciseIndex, workouts.length, setCurrentExerciseIndex, setCurrentRound, setIsResting, startTime, setIsRunning, setTimerDisplay]);
+  }, [currentRound, rounds, currentExerciseIndex, workouts.length, setCurrentExerciseIndex, setCurrentRound, setIsResting, startTime, setIsRunning, setTimerDisplay]);
 
   const updateTimer = useCallback(() => {
     if (remainingTimeRef.current > 0) {
@@ -337,8 +344,7 @@ export default function Main() {
                 <button
                   className="p-6 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors shadow-lg"
                   onClick={() => {
-                    resetTimer();
-                    setCurrentExerciseIndex((prev) => (prev + 1) % workouts.length);
+                    moveToNextExercise();
                   }}
                 >
                   <FaRedo className="w-8 h-8" />
