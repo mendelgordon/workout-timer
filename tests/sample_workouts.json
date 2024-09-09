@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Push-ups",
+    "description": "Perform standard push-ups",
+    "repetitions": 15,
+    "sets": 3,
+    "holdTime": 0,
+    "image": null
+  },
+  {
+    "name": "Plank",
+    "description": "Hold a plank position",
+    "repetitions": 1,
+    "sets": 3,
+    "holdTime": 30,
+    "image": null
+  },
+  {
+    "name": "Squats",
+    "description": "Perform bodyweight squats",
+    "repetitions": 20,
+    "sets": 3,
+    "holdTime": 0,
+    "image": null
+  },
+  {
+    "name": "Lunges",
+    "description": "Alternate leg lunges",
+    "repetitions": 10,
+    "sets": 3,
+    "holdTime": 0,
+    "image": null
+  },
+  {
+    "name": "Mountain Climbers",
+    "description": "Perform mountain climbers",
+    "repetitions": 30,
+    "sets": 3,
+    "holdTime": 0,
+    "image": null
+  }
+]
