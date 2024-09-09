@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 
 const WorkoutEditor = ({ workout = {}, onSave, onCancel, onReset, onAddWorkout, onRemoveWorkout, onAddRest }) => {
   const [name, setName] = useState(workout.name || '');
@@ -119,8 +120,14 @@ const WorkoutEditor = ({ workout = {}, onSave, onCancel, onReset, onAddWorkout, 
               />
             </div>
             {image && (
-              <div>
-                <img src={image} alt="Exercise preview" className="mt-2 rounded-md max-h-48 object-cover" />
+              <div className="relative w-full h-48">
+                <Image
+                  src={image}
+                  alt="Exercise preview"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-md"
+                />
               </div>
             )}
           </>

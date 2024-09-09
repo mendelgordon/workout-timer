@@ -20,7 +20,7 @@ const getStoredWorkouts = () => {
   return DEFAULT_WORKOUTS;
 };
 
-export function Main() {
+export default function Main() {
   const [timerDisplay, setTimerDisplay] = useState('00:00');
   const [startTime, setStartTime] = useState('00:05');
   const [restTime, setRestTime] = useState('00:05');
@@ -85,6 +85,34 @@ export function Main() {
     setWorkouts(updatedWorkouts);
   };
 
+  const timeToSeconds = (time) => {
+    const [minutes, seconds] = time.split(':').map(Number);
+    return minutes * 60 + seconds;
+  };
+
+  const formatTime = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const moveToNextExercise = useCallback(() => {
+    if (currentExerciseIndex < workouts.length - 1) {
+      setCurrentExerciseIndex(prev => prev + 1);
+      setCurrentRound(0);
+      setIsResting(false);
+      remainingTimeRef.current = timeToSeconds(startTime);
+    } else {
+      clearInterval(intervalRef.current);
+      setIsRunning(false);
+      setIsResting(false);
+      setCurrentRound(0);
+      setCurrentExerciseIndex(0);
+      remainingTimeRef.current = timeToSeconds(startTime);
+      setTimerDisplay(formatTime(remainingTimeRef.current));
+    }
+  }, [currentExerciseIndex, workouts.length, setCurrentExerciseIndex, setCurrentRound, setIsResting, startTime, setIsRunning, setTimerDisplay]);
+
   const updateTimer = useCallback(() => {
     if (remainingTimeRef.current > 0) {
       remainingTimeRef.current--;
@@ -103,7 +131,7 @@ export function Main() {
         remainingTimeRef.current = timeToSeconds(restTime);
       }
     }
-  }, [isResting, currentRound, rounds, startTime, restTime]);
+  }, [isResting, currentRound, rounds, startTime, restTime, moveToNextExercise, setTimerDisplay, setCurrentRound, setIsResting]);
 
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
@@ -122,26 +150,9 @@ export function Main() {
     localStorage.setItem('workouts', JSON.stringify(workouts));
   }, [workouts]);
 
-  const moveToNextExercise = () => {
-    if (currentExerciseIndex < workouts.length - 1) {
-      setCurrentExerciseIndex(prev => prev + 1);
-      setCurrentRound(0);
-      setIsResting(false);
-      remainingTimeRef.current = timeToSeconds(startTime);
-    } else {
-      resetTimer();
-    }
-  };
-
-  const resetTimer = () => {
-    clearInterval(intervalRef.current);
-    setIsRunning(false);
-    setIsResting(false);
-    setCurrentRound(0);
-    setCurrentExerciseIndex(0);
-    remainingTimeRef.current = timeToSeconds(startTime);
-    setTimerDisplay(formatTime(remainingTimeRef.current));
-  };
+  const resetTimer = useCallback(() => {
+    moveToNextExercise();
+  }, [moveToNextExercise]);
 
   const toggleTimer = () => {
     if (!isRunning) {
@@ -165,17 +176,6 @@ export function Main() {
 
   const handleRestTimeChange = (e) => setRestTime(e.target.value);
   const handleRoundsChange = (e) => setRounds(e.target.value);
-
-  const timeToSeconds = (time) => {
-    const [minutes, seconds] = time.split(':').map(Number);
-    return minutes * 60 + seconds;
-  };
-
-  const formatTime = (totalSeconds) => {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
