@@ -28,6 +28,18 @@ const theme = extendTheme({
       800: '#822727',
       900: '#63171B',
     },
+    gray: {
+      50: '#F7FAFC',
+      100: '#EDF2F7',
+      200: '#E2E8F0',
+      300: '#CBD5E0',
+      400: '#A0AEC0',
+      500: '#718096',
+      600: '#4A5568',
+      700: '#2D3748',
+      800: '#1A202C',
+      900: '#171923',
+    },
   },
   styles: {
     global: {
@@ -42,6 +54,29 @@ const theme = extendTheme({
     useSystemColorMode: false,
   },
 })
+
+// Ensure all color values are defined
+const ensureColorValues = (colors) => {
+  const ensureNestedColors = (obj) => {
+    return new Proxy(obj, {
+      get: (target, prop) => {
+        if (prop in target) {
+          return typeof target[prop] === 'object'
+            ? ensureNestedColors(target[prop])
+            : target[prop];
+        }
+        return '#000000';
+      }
+    });
+  };
+
+  return Object.keys(colors).reduce((acc, color) => {
+    acc[color] = ensureNestedColors(colors[color]);
+    return acc;
+  }, {});
+};
+
+theme.colors = ensureColorValues(theme.colors);
 
 function MyApp({ Component, pageProps }) {
   return (

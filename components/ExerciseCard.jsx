@@ -1,39 +1,26 @@
 import React from 'react';
-import { Box, Text, Image, VStack, useColorModeValue } from '@chakra-ui/react';
 
 const ExerciseCard = ({ exercise, image }) => {
-  const bgColor = useColorModeValue('white', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
-
   return (
-    <Box
-      bg={bgColor}
-      borderRadius="lg"
-      boxShadow="md"
-      p={4}
-      maxWidth="300px"
-      width="100%"
-    >
-      <VStack spacing={4} align="stretch">
+    <div className="bg-white dark:bg-gray-700 rounded-lg shadow-md p-4 max-w-[300px] w-full">
+      <div className="flex flex-col space-y-4">
         {image && (
-          <Image
+          <img
             src={image}
             alt={exercise.name}
-            borderRadius="md"
-            objectFit="cover"
-            maxHeight="200px"
+            className="rounded-md object-cover max-h-[200px]"
           />
         )}
-        <Text fontSize="xl" fontWeight="bold" color={textColor}>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
           {exercise.name}
-        </Text>
-        <Text color={textColor}>{exercise.description}</Text>
-        <Text color={textColor}>
+        </h2>
+        <p className="text-gray-800 dark:text-white">{exercise.description}</p>
+        <p className="text-gray-800 dark:text-white">
           Repetitions: {exercise.repetitions} | Sets: {exercise.sets}
-        </Text>
-        <Text color={textColor}>Hold for {exercise.holdTime} seconds</Text>
-      </VStack>
-    </Box>
+        </p>
+        <p className="text-gray-800 dark:text-white">Hold for {exercise.holdTime} seconds</p>
+      </div>
+    </div>
   );
 };
 

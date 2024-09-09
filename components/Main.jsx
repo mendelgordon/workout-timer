@@ -1,18 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  VStack,
-  Heading,
-  Text,
-  Button,
-  Input,
-  Flex,
-  Icon,
-  useColorModeValue,
-  HStack,
-} from '@chakra-ui/react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaPlay, FaPause, FaRedo } from 'react-icons/fa';
 import ExerciseCard from './ExerciseCard';
 
@@ -29,9 +17,7 @@ export function Main() {
   const intervalRef = useRef(null);
   const remainingTimeRef = useRef(0);
 
-  const bgGradient = useColorModeValue('linear(to-b, pink.500, red.500)', 'linear(to-b, pink.700, red.700)');
-  const textColor = useColorModeValue('white', 'gray.200');
-  const sectionBg = useColorModeValue('white', 'gray.700');
+  // Color values are now handled by Tailwind classes
 
   const exercises = [
     { name: "No Money's", description: "Perform the No Money's exercise", repetitions: 10, sets: 2, holdTime: 5 },
@@ -40,20 +26,7 @@ export function Main() {
     { name: "TRUNK EXTENSION - TOWEL - AROM - MOBILIZATION", description: "Perform the Trunk Extension exercise", repetitions: 10, sets: 2, holdTime: 5 },
   ];
 
-  useEffect(() => {
-    return () => clearInterval(intervalRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(updateTimer, 1000);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-    return () => clearInterval(intervalRef.current);
-  }, [isRunning, isResting]);
-
-  const updateTimer = () => {
+  const updateTimer = useCallback(() => {
     if (remainingTimeRef.current > 0) {
       remainingTimeRef.current--;
       setTimerDisplay(formatTime(remainingTimeRef.current));
@@ -71,7 +44,20 @@ export function Main() {
         remainingTimeRef.current = timeToSeconds(restTime);
       }
     }
-  };
+  }, [isResting, currentRound, rounds, startTime, restTime]);
+
+  useEffect(() => {
+    return () => clearInterval(intervalRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (isRunning) {
+      intervalRef.current = setInterval(updateTimer, 1000);
+    } else {
+      clearInterval(intervalRef.current);
+    }
+    return () => clearInterval(intervalRef.current);
+  }, [isRunning, updateTimer]);
 
   const moveToNextExercise = () => {
     if (currentExerciseIndex < exercises.length - 1) {
@@ -129,73 +115,48 @@ export function Main() {
   };
 
   return (
-    <Box minH="100vh" bg="pink.500" color={useColorModeValue('white', 'gray.200')}>
-      <VStack spacing={8} align="stretch">
-        <Flex as="header" justify="space-between" p={4}>
-          <Heading size="md">Workout Timer</Heading>
-        </Flex>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="container mx-auto px-4 py-8">
+        <header className="mb-8">
+          <h1 className="text-4xl font-heading font-bold">Workout Timer</h1>
+        </header>
 
-        <VStack as="main" spacing={6} flex={1} justify="center">
+        <main className="flex flex-col items-center space-y-8">
           <ExerciseCard exercise={exercises[currentExerciseIndex]} />
-          <Text fontSize="6xl" fontWeight="bold">{timerDisplay}</Text>
-          <Text fontSize="xl">Round: {currentRound + 1}/{rounds}</Text>
-          <Text fontSize="xl">{isResting ? 'Resting' : 'Working'}</Text>
-          <Button
-            size="lg"
-            rounded="full"
-            bg="white"
-            color="red.500"
+          <div className="text-7xl font-bold">{timerDisplay}</div>
+          <div className="text-2xl">Round: {currentRound + 1}/{rounds}</div>
+          <div className="text-2xl font-semibold">{isResting ? 'Resting' : 'Working'}</div>
+          <button
+            className="p-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg"
             onClick={toggleTimer}
             data-testid="play-pause-button"
           >
-            <Icon as={isRunning ? FaPause : FaPlay} />
-          </Button>
-        </VStack>
+            {isRunning ? <FaPause className="w-8 h-8" /> : <FaPlay className="w-8 h-8" />}
+          </button>
+        </main>
 
-        <Box bg={sectionBg} p={4} borderTopRadius="3xl">
-          <VStack spacing={4}>
-            <Flex justify="space-between" w="full" bg="green.100" p={4} borderRadius="md">
-              <Flex align="center">
-                <Icon as={FaPlay} color="green.500" mr={2} />
-                <Text color="gray.700">Start</Text>
-              </Flex>
-              <Input
-                value={startTime}
-                onChange={handleStartTimeChange}
-                w="70px"
-                textAlign="right"
-                color="green.500"
-              />
-            </Flex>
-            <Flex justify="space-between" w="full" bg="red.100" p={4} borderRadius="md">
-              <Flex align="center">
-                <Icon as={FaPause} color="red.500" mr={2} />
-                <Text color="gray.700">Rest</Text>
-              </Flex>
-              <Input
-                value={restTime}
-                onChange={handleRestTimeChange}
-                w="70px"
-                textAlign="right"
-                color="red.500"
-              />
-            </Flex>
-            <Flex justify="space-between" w="full" bg="blue.100" p={4} borderRadius="md">
-              <Flex align="center">
-                <Icon as={FaRedo} color="blue.500" mr={2} />
-                <Text color="gray.700">Rounds</Text>
-              </Flex>
-              <Input
-                value={rounds}
-                onChange={handleRoundsChange}
-                w="70px"
-                textAlign="right"
-                color="blue.500"
-              />
-            </Flex>
-          </VStack>
-        </Box>
-      </VStack>
-    </Box>
+        <div className="mt-12 bg-card text-card-foreground p-6 rounded-lg shadow-lg">
+          <div className="space-y-4">
+            {[
+              { label: 'Start', icon: FaPlay, color: 'green', value: startTime, onChange: handleStartTimeChange },
+              { label: 'Rest', icon: FaPause, color: 'red', value: restTime, onChange: handleRestTimeChange },
+              { label: 'Rounds', icon: FaRedo, color: 'blue', value: rounds, onChange: handleRoundsChange },
+            ].map(({ label, icon: Icon, color, value, onChange }) => (
+              <div key={label} className="flex justify-between items-center w-full p-4 rounded-md bg-secondary">
+                <div className="flex items-center">
+                  <Icon className="text-muted-foreground mr-2 w-5 h-5" />
+                  <span className="text-foreground">{label}</span>
+                </div>
+                <input
+                  value={value}
+                  onChange={onChange}
+                  className="w-20 text-right bg-transparent border-b border-input focus:border-primary transition-colors"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
