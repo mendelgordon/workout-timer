@@ -37,6 +37,40 @@ export default function Main() {
     setWorkouts(getStoredWorkouts());
   }, []);
 
+  const handleSaveWorkout = useCallback((index, updatedWorkout) => {
+    setWorkouts(prevWorkouts => {
+      const updatedWorkouts = [...prevWorkouts];
+      updatedWorkouts[index] = updatedWorkout;
+      return updatedWorkouts;
+    });
+  }, []);
+
+  const handleMoveUp = useCallback((index) => {
+    if (index > 0) {
+      setWorkouts(prevWorkouts => {
+        const updatedWorkouts = [...prevWorkouts];
+        [updatedWorkouts[index - 1], updatedWorkouts[index]] = [updatedWorkouts[index], updatedWorkouts[index - 1]];
+        return updatedWorkouts;
+      });
+    }
+  }, []);
+
+  const handleMoveDown = useCallback((index) => {
+    setWorkouts(prevWorkouts => {
+      if (index < prevWorkouts.length - 1) {
+        const updatedWorkouts = [...prevWorkouts];
+        [updatedWorkouts[index], updatedWorkouts[index + 1]] = [updatedWorkouts[index + 1], updatedWorkouts[index]];
+        return updatedWorkouts;
+      }
+      return prevWorkouts;
+    });
+  }, []);
+
+  const handleResetWorkouts = useCallback(() => {
+    localStorage.removeItem('workouts');
+    setWorkouts(DEFAULT_WORKOUTS);
+  }, []);
+
   const intervalRef = useRef(null);
   const remainingTimeRef = useRef(0);
   const fileInputRef = useRef(null);
@@ -254,32 +288,13 @@ export default function Main() {
               <h2 className="text-2xl font-bold mb-4">Edit Workouts</h2>
               <WorkoutEditor
                 workouts={workouts}
-                onSave={(index, updatedWorkout) => {
-                  const updatedWorkouts = [...workouts];
-                  updatedWorkouts[index] = updatedWorkout;
-                  setWorkouts(updatedWorkouts);
-                }}
+                onSave={handleSaveWorkout}
                 onRemoveWorkout={removeWorkout}
-                onMoveUp={(index) => {
-                  if (index > 0) {
-                    const updatedWorkouts = [...workouts];
-                    [updatedWorkouts[index - 1], updatedWorkouts[index]] = [updatedWorkouts[index], updatedWorkouts[index - 1]];
-                    setWorkouts(updatedWorkouts);
-                  }
-                }}
-                onMoveDown={(index) => {
-                  if (index < workouts.length - 1) {
-                    const updatedWorkouts = [...workouts];
-                    [updatedWorkouts[index], updatedWorkouts[index + 1]] = [updatedWorkouts[index + 1], updatedWorkouts[index]];
-                    setWorkouts(updatedWorkouts);
-                  }
-                }}
+                onMoveUp={handleMoveUp}
+                onMoveDown={handleMoveDown}
                 addWorkout={addWorkout}
                 addRest={addRest}
-                onReset={() => {
-                  localStorage.removeItem('workouts');
-                  setWorkouts(DEFAULT_WORKOUTS);
-                }}
+                onReset={handleResetWorkouts}
               />
               <div className="mt-4">
                 <button

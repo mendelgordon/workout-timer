@@ -1,18 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { FaPlus, FaBed, FaEdit, FaEye, FaTrash, FaChevronDown, FaChevronUp, FaUndo, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
-  const [collapsedItems, setCollapsedItems] = useState(workouts.map(() => true));
+const WorkoutEditor = ({ initialWorkouts = [], onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
+  const [workouts, setWorkouts] = useState(initialWorkouts);
+  const [collapsedItems, setCollapsedItems] = useState(initialWorkouts.map(() => true));
 
+  useEffect(() => {
+    setWorkouts(initialWorkouts);
+    setCollapsedItems(initialWorkouts.map(() => true));
+  }, [initialWorkouts]);
 
-  const toggleCollapse = (index) => {
+  const toggleCollapse = useCallback((index) => {
     setCollapsedItems(prev => {
       const newCollapsedItems = [...prev];
       newCollapsedItems[index] = !newCollapsedItems[index];
       return newCollapsedItems;
     });
-  };
+  }, []);
+
+  const handleMoveUp = useCallback((index) => {
+    if (index > 0) {
+      setWorkouts(prevWorkouts => {
+        const updatedWorkouts = [...prevWorkouts];
+        [updatedWorkouts[index - 1], updatedWorkouts[index]] = [updatedWorkouts[index], updatedWorkouts[index - 1]];
+        return updatedWorkouts;
+      });
+      onMoveUp(index);
+    }
+  }, [onMoveUp]);
+
+  const handleMoveDown = useCallback((index) => {
+    setWorkouts(prevWorkouts => {
+      if (index < prevWorkouts.length - 1) {
+        const updatedWorkouts = [...prevWorkouts];
+        [updatedWorkouts[index], updatedWorkouts[index + 1]] = [updatedWorkouts[index + 1], updatedWorkouts[index]];
+        return updatedWorkouts;
+      }
+      return prevWorkouts;
+    });
+    onMoveDown(index);
+  }, [onMoveDown]);
+
+  const handleRemoveWorkout = useCallback((index) => {
+    setWorkouts(prevWorkouts => prevWorkouts.filter((_, i) => i !== index));
+    onRemoveWorkout(index);
+  }, [onRemoveWorkout]);
+
+  const handleSaveWorkout = useCallback((index, updatedWorkout) => {
+    setWorkouts(prevWorkouts => {
+      const updatedWorkouts = [...prevWorkouts];
+      updatedWorkouts[index] = updatedWorkout;
+      return updatedWorkouts;
+    });
+    onSave(index, updatedWorkout);
+  }, [onSave]);
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
@@ -51,7 +93,7 @@ const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMove
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onMoveUp(index);
+                    handleMoveUp(index);
                   }}
                   className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   disabled={index === 0}
@@ -61,7 +103,7 @@ const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMove
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onMoveDown(index);
+                    handleMoveDown(index);
                   }}
                   className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   disabled={index === workouts.length - 1}
@@ -71,7 +113,7 @@ const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMove
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRemoveWorkout(index);
+                    handleRemoveWorkout(index);
                   }}
                   className="p-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200"
                 >
@@ -84,9 +126,8 @@ const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMove
               <div className="p-4">
                 <WorkoutItem
                   workout={workout}
-                  onSave={(updatedWorkout) => {
-                    onSave(index, updatedWorkout);
-                  }}
+                  onSave={(updatedWorkout) => handleSaveWorkout(index, updatedWorkout)}
+                  onRemove={() => handleRemoveWorkout(index)}
                 />
               </div>
             )}
@@ -112,17 +153,17 @@ const WorkoutEditor = ({ workouts = [], onSave, onReset, onRemoveWorkout, onMove
   );
 };
 
-const WorkoutItem = ({ workout, onSave, onRemove }) => {
+const WorkoutItem = React.memo(({ workout, onSave, onRemove }) => {
   const [name, setName] = useState(workout.name ? workout.name.charAt(0).toUpperCase() + workout.name.slice(1).toLowerCase() : '');
   const [description, setDescription] = useState(workout.description || '');
   const [repetitions, setRepetitions] = useState(workout.repetitions || 0);
   const [sets, setSets] = useState(workout.sets || 0);
   const [holdTime, setHoldTime] = useState(workout.holdTime || 0);
   const [image, setImage] = useState(workout.image || null);
-  const [isRest, setIsRest] = useState(workout.isRest || false);
+  const [isRest] = useState(workout.isRest || false);
   const [restTime, setRestTime] = useState(workout.restTime || 0);
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -132,9 +173,9 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
       };
       reader.readAsDataURL(file);
     }
-  };
+  }, []);
 
-  const saveWorkout = (updatedFields = {}) => {
+  const saveWorkout = useCallback(() => {
     onSave({
       name,
       description,
@@ -144,14 +185,17 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
       image,
       isRest,
       restTime: parseInt(restTime),
-      ...updatedFields
     });
-  };
+  }, [name, description, repetitions, sets, holdTime, image, isRest, restTime, onSave]);
 
-  const handleInputChange = (setter) => (e) => {
-    setter(e.target.value);
-    saveWorkout({ [e.target.name]: e.target.value });
-  };
+  const handleInputChange = useCallback((setter) => (e) => {
+    const { value } = e.target;
+    setter(value);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    saveWorkout();
+  }, [saveWorkout]);
 
   return (
     <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
@@ -166,6 +210,7 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                 name="name"
                 value={name}
                 onChange={handleInputChange(setName)}
+                onBlur={handleBlur}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                 required
               />
@@ -177,6 +222,7 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                 name="description"
                 value={description}
                 onChange={handleInputChange(setDescription)}
+                onBlur={handleBlur}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                 rows="3"
               ></textarea>
@@ -190,6 +236,7 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                   name="repetitions"
                   value={repetitions}
                   onChange={handleInputChange(setRepetitions)}
+                  onBlur={handleBlur}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                   min="0"
                   required
@@ -203,6 +250,7 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                   name="sets"
                   value={sets}
                   onChange={handleInputChange(setSets)}
+                  onBlur={handleBlur}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                   min="0"
                   required
@@ -216,6 +264,7 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
                   name="holdTime"
                   value={holdTime}
                   onChange={handleInputChange(setHoldTime)}
+                  onBlur={handleBlur}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
                   min="0"
                   required
@@ -259,6 +308,7 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
               name="restTime"
               value={restTime}
               onChange={handleInputChange(setRestTime)}
+              onBlur={handleBlur}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-3 py-2"
               min="0"
               required
@@ -279,6 +329,6 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
       </div>
     </div>
   );
-};
+});
 
 export default WorkoutEditor;
