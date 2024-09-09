@@ -180,20 +180,20 @@ export default function Main() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
-        <header className="mb-8 flex justify-between items-center">
-          <h1 className="text-4xl font-heading font-bold">Workout Timer</h1>
-          <div className="flex space-x-2">
+        <header className="mb-8 flex flex-col sm:flex-row justify-between items-center">
+          <h1 className="text-4xl font-heading font-bold mb-4 sm:mb-0">Workout Timer</h1>
+          <div className="flex flex-wrap justify-center sm:justify-end space-x-2 space-y-2 sm:space-y-0">
             <button
               onClick={handleExport}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
-              Export Workouts
+              <FaFileExport className="inline-block mr-2" /> Export
             </button>
             <button
               onClick={() => fileInputRef.current.click()}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
-              Import Workouts
+              <FaFileImport className="inline-block mr-2" /> Import
             </button>
             <input
               type="file"
@@ -206,6 +206,7 @@ export default function Main() {
               onClick={() => setIsEditing(!isEditing)}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
+              {isEditing ? <FaEye className="inline-block mr-2" /> : <FaEdit className="inline-block mr-2" />}
               {isEditing ? 'View Workout' : 'Edit Workout'}
             </button>
           </div>
@@ -248,15 +249,15 @@ export default function Main() {
               </div>
             </div>
           ) : (
-            <>
-              <div className="w-full max-w-md">
+            <div className="w-full max-w-2xl flex flex-col items-center space-y-6">
+              <div className="w-full flex justify-between items-center">
                 <select
                   value={currentExerciseIndex}
                   onChange={(e) => {
                     setCurrentExerciseIndex(Number(e.target.value));
                     resetTimer();
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-2/3 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   {workouts.map((workout, index) => (
                     <option key={index} value={index}>
@@ -264,15 +265,21 @@ export default function Main() {
                     </option>
                   ))}
                 </select>
+                <div className="text-xl font-semibold">
+                  Round: {currentRound + 1}/{rounds}
+                </div>
               </div>
-              {workouts[currentExerciseIndex].isRest ? (
-                <div className="text-2xl font-semibold">Rest Period</div>
-              ) : (
+
+              <div className="text-7xl font-bold">{timerDisplay}</div>
+
+              <div className="text-2xl font-semibold">
+                {isResting ? 'Resting' : workouts[currentExerciseIndex].isRest ? 'Rest Period' : 'Working'}
+              </div>
+
+              {!workouts[currentExerciseIndex].isRest && (
                 <ExerciseCard exercise={workouts[currentExerciseIndex]} />
               )}
-              <div className="text-7xl font-bold">{timerDisplay}</div>
-              <div className="text-2xl">Round: {currentRound + 1}/{rounds}</div>
-              <div className="text-2xl font-semibold">{isResting ? 'Resting' : 'Working'}</div>
+
               <div className="flex space-x-4">
                 <button
                   className="p-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg"
@@ -291,33 +298,31 @@ export default function Main() {
                   <FaRedo className="w-8 h-8" />
                 </button>
               </div>
-            </>
+
+              <div className="w-full bg-card text-card-foreground p-6 rounded-lg shadow-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { label: 'Start', icon: FaPlay, color: 'green', value: startTime, onChange: handleStartTimeChange },
+                    { label: 'Rest', icon: FaPause, color: 'red', value: restTime, onChange: handleRestTimeChange },
+                    { label: 'Rounds', icon: FaRedo, color: 'blue', value: rounds, onChange: handleRoundsChange },
+                  ].map(({ label, icon: Icon, color, value, onChange }) => (
+                    <div key={label} className="flex flex-col items-center p-4 rounded-md bg-secondary">
+                      <div className="flex items-center mb-2">
+                        <Icon className={`text-${color}-500 mr-2 w-5 h-5`} />
+                        <span className="text-foreground">{label}</span>
+                      </div>
+                      <input
+                        value={value}
+                        onChange={onChange}
+                        className="w-20 text-center bg-transparent border-b border-input focus:border-primary transition-colors"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </main>
-
-        {!isEditing && (
-          <div className="mt-12 bg-card text-card-foreground p-6 rounded-lg shadow-lg">
-            <div className="space-y-4">
-              {[
-                { label: 'Start', icon: FaPlay, color: 'green', value: startTime, onChange: handleStartTimeChange },
-                { label: 'Rest', icon: FaPause, color: 'red', value: restTime, onChange: handleRestTimeChange },
-                { label: 'Rounds', icon: FaRedo, color: 'blue', value: rounds, onChange: handleRoundsChange },
-              ].map(({ label, icon: Icon, color, value, onChange }) => (
-                <div key={label} className="flex justify-between items-center w-full p-4 rounded-md bg-secondary">
-                  <div className="flex items-center">
-                    <Icon className="text-muted-foreground mr-2 w-5 h-5" />
-                    <span className="text-foreground">{label}</span>
-                  </div>
-                  <input
-                    value={value}
-                    onChange={onChange}
-                    className="w-20 text-right bg-transparent border-b border-input focus:border-primary transition-colors"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

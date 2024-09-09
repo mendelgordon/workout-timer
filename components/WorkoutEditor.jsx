@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { FaBars, FaGripLines } from 'react-icons/fa';
+import { FaBars, FaGripLines, FaPlus, FaBed, FaEdit, FaEye, FaTrash, FaSave, FaTimes, FaUndo } from 'react-icons/fa';
 
 const WorkoutEditor = ({ workouts = [], onSave, onCancel, onReset, onRemoveWorkout, onReorder, addWorkout, addRest }) => {
   const handleDragEnd = useCallback((result) => {
@@ -20,14 +20,16 @@ const WorkoutEditor = ({ workouts = [], onSave, onCancel, onReset, onRemoveWorko
         <button
           onClick={addWorkout}
           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+          title="Add Workout"
         >
-          Add Workout
+          <FaPlus className="w-5 h-5" />
         </button>
         <button
           onClick={addRest}
           className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          title="Add Rest"
         >
-          Add Rest
+          <FaBed className="w-5 h-5" />
         </button>
       </div>
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -75,15 +77,17 @@ const WorkoutEditor = ({ workouts = [], onSave, onCancel, onReset, onRemoveWorko
           type="button"
           onClick={onCancel}
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          title="Cancel"
         >
-          Cancel
+          <FaTimes className="w-5 h-5" />
         </button>
         <button
           type="button"
           onClick={onReset}
           className="px-4 py-2 border border-yellow-500 text-yellow-500 rounded-md shadow-sm text-sm font-medium hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+          title="Reset"
         >
-          Reset
+          <FaUndo className="w-5 h-5" />
         </button>
       </div>
     </div>
@@ -237,14 +241,16 @@ const WorkoutItem = ({ workout, onSave, onRemove }) => {
           type="button"
           onClick={onRemove}
           className="px-4 py-2 border border-red-500 text-red-500 rounded-md shadow-sm text-sm font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          title="Remove"
         >
-          Remove
+          <FaTrash className="w-5 h-5" />
         </button>
         <button
           type="submit"
           className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          title="Save"
         >
-          Save
+          <FaSave className="w-5 h-5" />
         </button>
       </div>
     </form>
