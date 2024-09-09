@@ -68,7 +68,18 @@ export function Main() {
     }
   };
 
-  // Color values are now handled by Tailwind classes
+  const addWorkout = () => {
+    setWorkouts([...workouts, { name: 'New Workout', description: '', repetitions: 0, sets: 0, holdTime: 0 }]);
+  };
+
+  const addRest = () => {
+    setWorkouts([...workouts, { isRest: true, restTime: 60 }]);
+  };
+
+  const removeWorkout = (index) => {
+    const updatedWorkouts = workouts.filter((_, i) => i !== index);
+    setWorkouts(updatedWorkouts);
+  };
 
   const updateTimer = useCallback(() => {
     if (remainingTimeRef.current > 0) {
@@ -209,25 +220,37 @@ export function Main() {
               {workouts.map((workout, index) => (
                 <WorkoutEditor
                   key={index}
-                  exercise={workout}
-                  onSave={(updatedExercise) => {
+                  workout={workout}
+                  onSave={(updatedWorkout) => {
                     const updatedWorkouts = [...workouts];
-                    updatedWorkouts[index] = updatedExercise;
+                    updatedWorkouts[index] = updatedWorkout;
                     setWorkouts(updatedWorkouts);
                   }}
-                  onDelete={() => {
-                    const updatedWorkouts = workouts.filter((_, i) => i !== index);
-                    setWorkouts(updatedWorkouts);
-                  }}
-                  onReset={resetWorkouts}
+                  onRemoveWorkout={() => removeWorkout(index)}
+                  onAddWorkout={addWorkout}
+                  onAddRest={addRest}
                 />
               ))}
-              <button
-                onClick={() => setIsEditing(false)}
-                className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-              >
-                Done Editing
-              </button>
+              <div className="mt-4 flex space-x-2">
+                <button
+                  onClick={addWorkout}
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                >
+                  Add Workout
+                </button>
+                <button
+                  onClick={addRest}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Add Rest
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  Done Editing
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -242,12 +265,16 @@ export function Main() {
                 >
                   {workouts.map((workout, index) => (
                     <option key={index} value={index}>
-                      {workout.name}
+                      {workout.isRest ? `Rest (${workout.restTime}s)` : workout.name}
                     </option>
                   ))}
                 </select>
               </div>
-              <ExerciseCard exercise={workouts[currentExerciseIndex]} />
+              {workouts[currentExerciseIndex].isRest ? (
+                <div className="text-2xl font-semibold">Rest Period</div>
+              ) : (
+                <ExerciseCard exercise={workouts[currentExerciseIndex]} />
+              )}
               <div className="text-7xl font-bold">{timerDisplay}</div>
               <div className="text-2xl">Round: {currentRound + 1}/{rounds}</div>
               <div className="text-2xl font-semibold">{isResting ? 'Resting' : 'Working'}</div>
