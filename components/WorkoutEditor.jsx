@@ -325,17 +325,6 @@ const WorkoutItem = React.memo(({ workout, onSave, onRemove }) => {
           </div>
         )}
       </div>
-      <div className="mt-4 flex justify-end items-center">
-        <button
-          type="button"
-          onClick={memoizedOnRemove}
-          className="group relative px-4 py-2 border border-red-500 text-red-500 rounded-md shadow-sm text-sm font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          title="Remove"
-        >
-          <FaTrash className="w-5 h-5" />
-          <span className="absolute left-full ml-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2">Remove</span>
-        </button>
-      </div>
     </div>
   );
 }, (prevProps, nextProps) => {
