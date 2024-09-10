@@ -2,10 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image';
 import { FaPlus, FaBed, FaEdit, FaEye, FaTrash, FaChevronDown, FaChevronUp, FaUndo, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const WorkoutEditor = React.memo(({ initialWorkouts = [], onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
-  const memoizedInitialWorkouts = useMemo(() => initialWorkouts, [initialWorkouts]);
-  const [workouts, setWorkouts] = useState(memoizedInitialWorkouts);
-  const [collapsedItems, setCollapsedItems] = useState(memoizedInitialWorkouts.map(() => true));
+const WorkoutEditor = React.memo(({ workouts, onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
+  const [collapsedItems, setCollapsedItems] = useState(workouts.map(() => true));
   const workoutsRef = useRef(workouts);
 
   WorkoutEditor.displayName = 'WorkoutEditor';
@@ -19,10 +17,9 @@ const WorkoutEditor = React.memo(({ initialWorkouts = [], onSave, onReset, onRem
   const memoizedAddRest = useCallback(addRest, [addRest]);
 
   useEffect(() => {
-    setWorkouts(memoizedInitialWorkouts);
-    setCollapsedItems(memoizedInitialWorkouts.map(() => true));
-    workoutsRef.current = memoizedInitialWorkouts;
-  }, [memoizedInitialWorkouts]);
+    setCollapsedItems(workouts.map(() => true));
+    workoutsRef.current = workouts;
+  }, [workouts]);
 
   const toggleCollapse = useCallback((index) => {
     setCollapsedItems(prev => {
@@ -34,40 +31,21 @@ const WorkoutEditor = React.memo(({ initialWorkouts = [], onSave, onReset, onRem
 
   const handleMoveUp = useCallback((index) => {
     if (index > 0) {
-      setWorkouts(prevWorkouts => {
-        const updatedWorkouts = [...prevWorkouts];
-        [updatedWorkouts[index - 1], updatedWorkouts[index]] = [updatedWorkouts[index], updatedWorkouts[index - 1]];
-        return updatedWorkouts;
-      });
-      onMoveUp(index);
+      memoizedOnMoveUp(index);
     }
-  }, [onMoveUp]);
+  }, [memoizedOnMoveUp]);
 
   const handleMoveDown = useCallback((index) => {
-    setWorkouts(prevWorkouts => {
-      if (index < prevWorkouts.length - 1) {
-        const updatedWorkouts = [...prevWorkouts];
-        [updatedWorkouts[index], updatedWorkouts[index + 1]] = [updatedWorkouts[index + 1], updatedWorkouts[index]];
-        return updatedWorkouts;
-      }
-      return prevWorkouts;
-    });
-    onMoveDown(index);
-  }, [onMoveDown]);
+    memoizedOnMoveDown(index);
+  }, [memoizedOnMoveDown]);
 
   const handleRemoveWorkout = useCallback((index) => {
-    setWorkouts(prevWorkouts => prevWorkouts.filter((_, i) => i !== index));
-    onRemoveWorkout(index);
-  }, [onRemoveWorkout]);
+    memoizedOnRemoveWorkout(index);
+  }, [memoizedOnRemoveWorkout]);
 
   const handleSaveWorkout = useCallback((index, updatedWorkout) => {
-    setWorkouts(prevWorkouts => {
-      const updatedWorkouts = [...prevWorkouts];
-      updatedWorkouts[index] = updatedWorkout;
-      return updatedWorkouts;
-    });
-    onSave(index, updatedWorkout);
-  }, [onSave]);
+    memoizedOnSave(index, updatedWorkout);
+  }, [memoizedOnSave]);
 
 
 
@@ -92,7 +70,7 @@ const WorkoutEditor = React.memo(({ initialWorkouts = [], onSave, onReset, onRem
         </button>
       </div>
       <div>
-        {memoizedInitialWorkouts.map((workout, index) => (
+        {workouts.map((workout, index) => (
           <div
             key={workout.id || `workout-${index}`}
             className="mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600"
@@ -121,7 +99,7 @@ const WorkoutEditor = React.memo(({ initialWorkouts = [], onSave, onReset, onRem
                     handleMoveDown(index);
                   }}
                   className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  disabled={index === memoizedInitialWorkouts.length - 1}
+                  disabled={index === workouts.length - 1}
                 >
                   <FaArrowDown className="w-4 h-4" />
                 </button>

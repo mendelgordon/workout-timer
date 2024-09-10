@@ -12,16 +12,33 @@ const DEFAULT_WORKOUTS = [
   { name: "TRUNK EXTENSION - TOWEL - AROM - MOBILIZATION", description: "Perform the Trunk Extension exercise", repetitions: 10, sets: 2, holdTime: 5 },
 ];
 
-const getStoredWorkouts = () => {
-  if (typeof window !== 'undefined') {
-    const storedWorkouts = localStorage.getItem('workouts');
-    console.log('Retrieved workouts from localStorage:', storedWorkouts);
-    const parsedWorkouts = storedWorkouts ? JSON.parse(storedWorkouts) : DEFAULT_WORKOUTS;
-    console.log('Parsed workouts:', parsedWorkouts);
-    return parsedWorkouts;
-  }
-  console.log('Window not defined, returning DEFAULT_WORKOUTS');
-  return DEFAULT_WORKOUTS;
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    if (typeof window === "undefined") {
+      return initialValue;
+    }
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.log(error);
+      return initialValue;
+    }
+  });
+
+  const setValue = (value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return [storedValue, setValue];
 };
 
 export default function Main() {
@@ -33,13 +50,9 @@ export default function Main() {
   const [currentRound, setCurrentRound] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [workouts, setWorkouts] = useState(DEFAULT_WORKOUTS);
+  const [workouts, setWorkouts] = useLocalStorage('workouts', DEFAULT_WORKOUTS);
   const [isEditing, setIsEditing] = useState(false);
   const [importError, setImportError] = useState(null);
-
-  useEffect(() => {
-    setWorkouts(getStoredWorkouts());
-  }, []);
 
   const handleSaveWorkout = useCallback((index, updatedWorkout) => {
     console.log('Saving workout:', index, updatedWorkout);
@@ -53,7 +66,7 @@ export default function Main() {
       console.log('Updated workouts:', updatedWorkouts);
       return updatedWorkouts;
     });
-  }, []);
+  }, [setWorkouts]);
 
   const handleMoveUp = useCallback((index) => {
     if (index > 0) {
@@ -63,7 +76,7 @@ export default function Main() {
         return updatedWorkouts;
       });
     }
-  }, []);
+  }, [setWorkouts]);
 
   const handleMoveDown = useCallback((index) => {
     setWorkouts(prevWorkouts => {
@@ -74,7 +87,7 @@ export default function Main() {
       }
       return prevWorkouts;
     });
-  }, []);
+  }, [setWorkouts]);
 
   const handleResetWorkouts = useCallback(() => {
     localStorage.removeItem('workouts');
@@ -124,10 +137,9 @@ export default function Main() {
     setWorkouts([...workouts, { isRest: true, restTime: 60 }]);
   };
 
-  const removeWorkout = (index) => {
-    const updatedWorkouts = workouts.filter((_, i) => i !== index);
-    setWorkouts(updatedWorkouts);
-  };
+  const removeWorkout = useCallback((index) => {
+    setWorkouts(prevWorkouts => prevWorkouts.filter((_, i) => i !== index));
+  }, []);
 
   const onMoveUp = (index) => {
     if (index > 0) {
@@ -306,6 +318,7 @@ export default function Main() {
                 addWorkout={addWorkout}
                 addRest={addRest}
                 onReset={handleResetWorkouts}
+                setWorkouts={setWorkouts}
               />
               <div className="mt-4">
                 <button
