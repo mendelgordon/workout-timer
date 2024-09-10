@@ -7,9 +7,9 @@ import WorkoutEditor from './WorkoutEditor';
 
 const DEFAULT_WORKOUTS = [
   { name: "No Money's", description: "Perform the No Money's exercise", repetitions: 10, sets: 2, holdTime: 5 },
-  { name: "FREE WEIGHT - BILATERAL SCAPTION", description: "Perform the Bilateral Scaption exercise", repetitions: 10, sets: 2, holdTime: 5 },
-  { name: "CERVICAL RETRACTION / CHIN TUCK", description: "Perform the Chin Tuck exercise", repetitions: 10, sets: 2, holdTime: 5 },
-  { name: "TRUNK EXTENSION - TOWEL - AROM - MOBILIZATION", description: "Perform the Trunk Extension exercise", repetitions: 10, sets: 2, holdTime: 5 },
+  { name: "Free Weight - Bilateral Scaption", description: "Perform the Bilateral Scaption exercise", repetitions: 10, sets: 2, holdTime: 5 },
+  { name: "Cervical Retraction / Chin Tuck", description: "Perform the Chin Tuck exercise", repetitions: 10, sets: 2, holdTime: 5 },
+  { name: "Trunk Extension - Towel - Arom - Mobilization", description: "Perform the Trunk Extension exercise", repetitions: 10, sets: 2, holdTime: 5 },
 ];
 
 const useLocalStorage = (key, initialValue) => {
@@ -206,11 +206,23 @@ export default function Main() {
           moveToNextExercise();
         }
       } else {
-        setIsResting(true);
-        remainingTimeRef.current = timeToSeconds(restTime);
+        // Check if this is the last exercise and last round
+        if (currentExerciseIndex === workouts.length - 1 && currentRound === parseInt(rounds) - 1) {
+          // Stop the timer and reset the workout
+          clearInterval(intervalRef.current);
+          setIsRunning(false);
+          setCurrentRound(0);
+          setCurrentExerciseIndex(0);
+          setIsResting(false);
+          remainingTimeRef.current = timeToSeconds(startTime);
+          setTimerDisplay(formatTime(remainingTimeRef.current));
+        } else {
+          setIsResting(true);
+          remainingTimeRef.current = timeToSeconds(restTime);
+        }
       }
     }
-  }, [isResting, currentRound, rounds, startTime, restTime, moveToNextExercise, setTimerDisplay, setCurrentRound, setIsResting]);
+  }, [isResting, currentRound, rounds, startTime, restTime, moveToNextExercise, setTimerDisplay, setCurrentRound, setIsResting, currentExerciseIndex, workouts.length, setIsRunning, setCurrentExerciseIndex]);
 
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
