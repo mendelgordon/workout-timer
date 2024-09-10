@@ -13,6 +13,7 @@ const ExerciseCard = ({ exercise, image }) => {
               layout="fill"
               objectFit="cover"
               className="rounded-md"
+              sizes="(max-width: 300px) 100vw, 300px"
             />
           </div>
         )}

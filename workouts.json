@@ -1,0 +1,34 @@
+[
+  {
+    "name": "No Money's",
+    "description": "Perform the No Money's exercise",
+    "repetitions": 10,
+    "sets": 2,
+    "holdTime": 5,
+    "image": "/no-moneys.jpg"
+  },
+  {
+    "name": "Free Weight - Bilateral Scaption",
+    "description": "Perform the Bilateral Scaption exercise",
+    "repetitions": 10,
+    "sets": 2,
+    "holdTime": 5,
+    "image": "/bilateral-scaption.jpg"
+  },
+  {
+    "name": "Cervical Retraction / Chin Tuck",
+    "description": "Perform the Chin Tuck exercise",
+    "repetitions": 10,
+    "sets": 2,
+    "holdTime": 5,
+    "image": "/chin-tuck.jpg"
+  },
+  {
+    "name": "Trunk Extension - Towel - Arom - Mobilization",
+    "description": "Perform the Trunk Extension exercise",
+    "repetitions": 10,
+    "sets": 2,
+    "holdTime": 5,
+    "image": "/trunk-extension.jpg"
+  }
+]

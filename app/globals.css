@@ -44,4 +44,13 @@
   h6 {
     @apply font-heading;
   }
+
+  button,
+  [role="button"],
+  a,
+  input[type="submit"],
+  input[type="reset"],
+  input[type="button"] {
+    @apply cursor-pointer;
+  }
 }
