@@ -1,15 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { FaPlus, FaBed, FaEdit, FaEye, FaTrash, FaChevronDown, FaChevronUp, FaUndo, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
-const WorkoutEditor = ({ initialWorkouts = [], onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
-  const [workouts, setWorkouts] = useState(initialWorkouts);
-  const [collapsedItems, setCollapsedItems] = useState(initialWorkouts.map(() => true));
+const WorkoutEditor = React.memo(({ initialWorkouts = [], onSave, onReset, onRemoveWorkout, onMoveUp, onMoveDown, addWorkout, addRest }) => {
+  const memoizedInitialWorkouts = useMemo(() => initialWorkouts, [initialWorkouts]);
+  const [workouts, setWorkouts] = useState(memoizedInitialWorkouts);
+  const [collapsedItems, setCollapsedItems] = useState(memoizedInitialWorkouts.map(() => true));
+  const workoutsRef = useRef(workouts);
+
+  WorkoutEditor.displayName = 'WorkoutEditor';
+
+  const memoizedOnSave = useCallback(onSave, [onSave]);
+  const memoizedOnReset = useCallback(onReset, [onReset]);
+  const memoizedOnRemoveWorkout = useCallback(onRemoveWorkout, [onRemoveWorkout]);
+  const memoizedOnMoveUp = useCallback(onMoveUp, [onMoveUp]);
+  const memoizedOnMoveDown = useCallback(onMoveDown, [onMoveDown]);
+  const memoizedAddWorkout = useCallback(addWorkout, [addWorkout]);
+  const memoizedAddRest = useCallback(addRest, [addRest]);
 
   useEffect(() => {
-    setWorkouts(initialWorkouts);
-    setCollapsedItems(initialWorkouts.map(() => true));
-  }, [initialWorkouts]);
+    setWorkouts(memoizedInitialWorkouts);
+    setCollapsedItems(memoizedInitialWorkouts.map(() => true));
+    workoutsRef.current = memoizedInitialWorkouts;
+  }, [memoizedInitialWorkouts]);
 
   const toggleCollapse = useCallback((index) => {
     setCollapsedItems(prev => {
@@ -56,6 +69,8 @@ const WorkoutEditor = ({ initialWorkouts = [], onSave, onReset, onRemoveWorkout,
     onSave(index, updatedWorkout);
   }, [onSave]);
 
+
+
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
       <div className="mb-4 flex space-x-2">
@@ -77,7 +92,7 @@ const WorkoutEditor = ({ initialWorkouts = [], onSave, onReset, onRemoveWorkout,
         </button>
       </div>
       <div>
-        {workouts.map((workout, index) => (
+        {memoizedInitialWorkouts.map((workout, index) => (
           <div
             key={workout.id || `workout-${index}`}
             className="mb-4 bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600"
@@ -106,7 +121,7 @@ const WorkoutEditor = ({ initialWorkouts = [], onSave, onReset, onRemoveWorkout,
                     handleMoveDown(index);
                   }}
                   className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  disabled={index === workouts.length - 1}
+                  disabled={index === memoizedInitialWorkouts.length - 1}
                 >
                   <FaArrowDown className="w-4 h-4" />
                 </button>
@@ -151,32 +166,48 @@ const WorkoutEditor = ({ initialWorkouts = [], onSave, onReset, onRemoveWorkout,
       </div>
     </div>
   );
-};
+});
 
 const WorkoutItem = React.memo(({ workout, onSave, onRemove }) => {
-  const [name, setName] = useState(workout.name ? workout.name.charAt(0).toUpperCase() + workout.name.slice(1).toLowerCase() : '');
-  const [description, setDescription] = useState(workout.description || '');
-  const [repetitions, setRepetitions] = useState(workout.repetitions || 0);
-  const [sets, setSets] = useState(workout.sets || 0);
-  const [holdTime, setHoldTime] = useState(workout.holdTime || 0);
-  const [image, setImage] = useState(workout.image || null);
-  const [isRest] = useState(workout.isRest || false);
-  const [restTime, setRestTime] = useState(workout.restTime || 0);
+  const memoizedWorkout = useMemo(() => workout, [workout]);
+  const [name, setName] = useState(memoizedWorkout.name ? memoizedWorkout.name.charAt(0).toUpperCase() + memoizedWorkout.name.slice(1).toLowerCase() : '');
+  const [description, setDescription] = useState(memoizedWorkout.description || '');
+  const [repetitions, setRepetitions] = useState(memoizedWorkout.repetitions || 0);
+  const [sets, setSets] = useState(memoizedWorkout.sets || 0);
+  const [holdTime, setHoldTime] = useState(memoizedWorkout.holdTime || 0);
+  const [image, setImage] = useState(memoizedWorkout.image || null);
+  const [isRest] = useState(memoizedWorkout.isRest || false);
+  const [restTime, setRestTime] = useState(memoizedWorkout.restTime || 0);
+
+  WorkoutItem.displayName = 'WorkoutItem';
+
+  const memoizedOnSave = useCallback(onSave, [onSave]);
+  const memoizedOnRemove = useCallback(onRemove, [onRemove]);
 
   const handleImageUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
+        console.log('Image loaded:', reader.result.substring(0, 50) + '...'); // Log first 50 characters of image data
         setImage(reader.result);
-        saveWorkout({ image: reader.result });
       };
       reader.readAsDataURL(file);
     }
   }, []);
 
+  useEffect(() => {
+    if (image && image !== memoizedWorkout.image) {
+      memoizedOnSave((prevWorkout) => ({
+        ...prevWorkout,
+        image: image
+      }));
+    }
+  }, [image, memoizedWorkout.image, memoizedOnSave]);
+
   const saveWorkout = useCallback(() => {
-    onSave({
+    memoizedOnSave((prevWorkout) => ({
+      ...prevWorkout,
       name,
       description,
       repetitions: parseInt(repetitions),
@@ -185,8 +216,8 @@ const WorkoutItem = React.memo(({ workout, onSave, onRemove }) => {
       image,
       isRest,
       restTime: parseInt(restTime),
-    });
-  }, [name, description, repetitions, sets, holdTime, image, isRest, restTime, onSave]);
+    }));
+  }, [name, description, repetitions, sets, holdTime, image, isRest, restTime, memoizedOnSave]);
 
   const handleInputChange = useCallback((setter) => (e) => {
     const { value } = e.target;
@@ -319,7 +350,7 @@ const WorkoutItem = React.memo(({ workout, onSave, onRemove }) => {
       <div className="mt-4 flex justify-end items-center">
         <button
           type="button"
-          onClick={onRemove}
+          onClick={memoizedOnRemove}
           className="group relative px-4 py-2 border border-red-500 text-red-500 rounded-md shadow-sm text-sm font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           title="Remove"
         >
@@ -329,6 +360,8 @@ const WorkoutItem = React.memo(({ workout, onSave, onRemove }) => {
       </div>
     </div>
   );
+}, (prevProps, nextProps) => {
+  return JSON.stringify(prevProps.workout) === JSON.stringify(nextProps.workout);
 });
 
 export default WorkoutEditor;

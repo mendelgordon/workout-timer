@@ -15,8 +15,12 @@ const DEFAULT_WORKOUTS = [
 const getStoredWorkouts = () => {
   if (typeof window !== 'undefined') {
     const storedWorkouts = localStorage.getItem('workouts');
-    return storedWorkouts ? JSON.parse(storedWorkouts) : DEFAULT_WORKOUTS;
+    console.log('Retrieved workouts from localStorage:', storedWorkouts);
+    const parsedWorkouts = storedWorkouts ? JSON.parse(storedWorkouts) : DEFAULT_WORKOUTS;
+    console.log('Parsed workouts:', parsedWorkouts);
+    return parsedWorkouts;
   }
+  console.log('Window not defined, returning DEFAULT_WORKOUTS');
   return DEFAULT_WORKOUTS;
 };
 
@@ -38,9 +42,15 @@ export default function Main() {
   }, []);
 
   const handleSaveWorkout = useCallback((index, updatedWorkout) => {
+    console.log('Saving workout:', index, updatedWorkout);
     setWorkouts(prevWorkouts => {
+      if (JSON.stringify(prevWorkouts[index]) === JSON.stringify(updatedWorkout)) {
+        console.log('No changes detected, returning previous workouts');
+        return prevWorkouts;
+      }
       const updatedWorkouts = [...prevWorkouts];
       updatedWorkouts[index] = updatedWorkout;
+      console.log('Updated workouts:', updatedWorkouts);
       return updatedWorkouts;
     });
   }, []);
@@ -205,6 +215,7 @@ export default function Main() {
 
   useEffect(() => {
     localStorage.setItem('workouts', JSON.stringify(workouts));
+    console.log('Saved workouts to localStorage:', workouts);
   }, [workouts]);
 
   const resetTimer = useCallback(() => {
